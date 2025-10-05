@@ -209,7 +209,7 @@ function updateDialogue(result){
 function incrementTotalGames(){ totalGames++; totalGamesEl.textContent=totalGames; localStorage.setItem('totalGames', totalGames); }
 
 function maybeShowReward(){
-  if(streak > 0 && Math.random() < 1) { // 0.60 = 60% de chance
+  if(streak > 0 && Math.random() < 0.5) { // 0.60 = 60% de chance
     showRewardScreen();
   }
 }
@@ -337,3 +337,4 @@ updateDialogue('start');
 </script>
 </body>
 </html>
+
