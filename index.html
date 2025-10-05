@@ -5,250 +5,335 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Scyther vs Kleavor vs Scizor — Jogo</title>
 <style>
-  :root{
-    --bg:#0f1724;
-    --card:#0b1220;
-    --accent:#7dd3fc;
-    --muted:#94a3b8;
-    --win:#16a34a;
-    --lose:#dc2626;
-    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-  }
-  *{box-sizing:border-box}
-  body{
-    margin:0;
-    min-height:100vh;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    background:linear-gradient(180deg,#071027 0%, var(--bg) 100%);
-    color:#e6eef8;
-    padding:24px;
-  }
-  .container{
-    width:100%;
-    max-width:900px;
-    background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.15));
-    border-radius:14px;
-    padding:20px;
-    box-shadow:0 8px 30px rgba(2,6,23,0.6);
-  }
-  header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-direction:column}
-  .score{font-size:14px;color:var(--muted)}
-  .streak{font-size:14px;color:var(--accent);margin-top:4px;text-align:right}
-  .total-games{font-size:14px;color:#facc15;margin-top:2px;text-align:right}
-  .games-streak{font-size:14px;color:#38bdf8;margin-top:2px;text-align:right}
-  .arena{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:center}
-  .choices{display:flex;gap:12px;justify-content:center}
-  .choice-btn{
+:root{
+  --bg:#0f1724; --card:#0b1220; --accent:#7dd3fc; --muted:#94a3b8;
+  --win:#16a34a; --lose:#dc2626; font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}
+*{box-sizing:border-box}
+body{margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; background:linear-gradient(180deg,#071027 0%, var(--bg) 100%); color:#e6eef8; padding:24px; position:relative;}
+.container{width:100%; max-width:900px; background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.15)); border-radius:14px; padding:20px; box-shadow:0 8px 30px rgba(2,6,23,0.6); z-index:1; position:relative;}
+header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;}
+.score{font-size:14px;color:var(--muted)}
+.streak{font-size:14px;color:var(--accent);margin-top:4px;text-align:right}
+.total-games{font-size:14px;color:#facc15;margin-top:2px;text-align:right}
+.games-streak{font-size:14px;color:#38bdf8;margin-top:2px;text-align:right}
+.arena{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:center}
+.choices{display:flex;gap:12px;justify-content:center}
+.choice-btn{background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01)); border:1px solid rgba(255,255,255,0.04); padding:14px 18px; border-radius:10px; min-width:110px; text-align:center; cursor:pointer; transition:transform .12s ease, box-shadow .12s ease; user-select:none;}
+.choice-btn:hover{transform:translateY(-6px);box-shadow:0 10px 30px rgba(2,6,23,0.6)}
+.choice-btn:active{transform:translateY(-2px)}
+.label{display:block;font-size:13px;color:var(--muted);margin-top:8px}
+.poke-name{display:block;margin-top:6px;font-weight:700;color:#ffffff}
+.big{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px;border-radius:12px;background:var(--card);}
+.result-box{display:flex;flex-direction:column;align-items:center;gap:8px}
+.pick-img{width:80px;height:80px;object-fit:contain;}
+.vs{font-size:18px;color:var(--muted)}
+.outcome{font-weight:700;padding:6px 12px;border-radius:999px}
+.buttons-row{display:flex;gap:8px;justify-content:center;margin-top:12px}
+.small-btn{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px 10px;border-radius:8px;color:var(--muted);cursor:pointer}
+.win{background:linear-gradient(90deg, rgba(22,163,74,0.12), rgba(22,163,74,0.08));color:var(--win);border:1px solid rgba(22,163,74,0.18)}
+.lose{background:linear-gradient(90deg, rgba(220,38,38,0.08), rgba(220,38,38,0.04));color:var(--lose);border:1px solid rgba(220,38,38,0.14)}
+.tie{background:linear-gradient(90deg, rgba(148,163,184,0.06), rgba(148,163,184,0.03));color:var(--muted);border:1px solid rgba(148,163,184,0.08)}
+.dialogue-box{background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:12px 16px; text-align:center; font-style:italic; color:#cbd5e1; margin-bottom:16px; min-height:40px;}
+@keyframes blink {0%,100%{opacity:1;}50%{opacity:0.4;}}
+.thinking { animation: blink 0.5s infinite; }
+@media (max-width:640px){ .arena{grid-template-columns:1fr;} .choices{flex-wrap:wrap} .choice-btn{min-width:80px;padding:12px} }
+
+/* Tela de recompensa */
+#rewardScreen{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);display:flex;justify-content:flex-start;align-items:center;gap:24px;padding:24px;z-index:1000;display:none;}
+#rewardScreen img{width:300px; max-width:40%; object-fit:contain; border-radius:12px;}
+#rewardScreen .reward-dialogue{color:#f0f0f0; font-size:18px; max-width:50%; background:rgba(255,255,255,0.05); padding:16px; border-radius:12px; display:flex; flex-direction:column; gap:12px;}
+.reward-choice{
     background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
-    border:1px solid rgba(255,255,255,0.04);
-    padding:14px 18px;
-    border-radius:10px;
-    min-width:110px;
-    text-align:center;
-    cursor:pointer;
-    transition:transform .12s ease, box-shadow .12s ease;
-    user-select:none;
-  }
-  .choice-btn:hover{transform:translateY(-6px);box-shadow:0 10px 30px rgba(2,6,23,0.6)}
-  .choice-btn:active{transform:translateY(-2px)}
-  .label{display:block;font-size:13px;color:var(--muted);margin-top:8px}
-  .poke-name{display:block;margin-top:6px;font-weight:700;color:#ffffff}
-  .big{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px;border-radius:12px;background:var(--card);}
-  .result-box{display:flex;flex-direction:column;align-items:center;gap:8px}
-  .pick-img{width:80px;height:80px;object-fit:contain;}
-  .vs{font-size:18px;color:var(--muted)}
-  .outcome{font-weight:700;padding:6px 12px;border-radius:999px}
-  .buttons-row{display:flex;gap:8px;justify-content:center;margin-top:12px}
-  .small-btn{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px 10px;border-radius:8px;color:var(--muted);cursor:pointer}
-  .win{background:linear-gradient(90deg, rgba(22,163,74,0.12), rgba(22,163,74,0.08));color:var(--win);border:1px solid rgba(22,163,74,0.18)}
-  .lose{background:linear-gradient(90deg, rgba(220,38,38,0.08), rgba(220,38,38,0.04));color:var(--lose);border:1px solid rgba(220,38,38,0.14)}
-  .tie{background:linear-gradient(90deg, rgba(148,163,184,0.06), rgba(148,163,184,0.03));color:var(--muted);border:1px solid rgba(148,163,184,0.08)}
-  .dialogue-box{
-    background:rgba(255,255,255,0.05);
-    border:1px solid rgba(255,255,255,0.08);
-    border-radius:10px;
-    padding:12px 16px;
-    text-align:center;
-    font-style:italic;
-    color:#cbd5e1;
-    margin-bottom:16px;
-    min-height:40px;
-  }
-  @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
-  }
-  .thinking { animation: blink 0.5s infinite; }
-  @media (max-width:640px){
-    .arena{grid-template-columns:1fr;}
-    .choices{flex-wrap:wrap}
-    .choice-btn{min-width:80px;padding:12px}
-  }
+    border:1px solid rgba(255,255,255,0.04); 
+    padding:14px 20px;   
+    border-radius:8px; 
+    cursor:pointer; 
+    color:#e6eef8; 
+    text-align:center; 
+    transition:transform .12s ease; 
+    font-size:16px;       
+}
+.reward-choice:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,0.5);}
 </style>
 </head>
 <body>
-  <div class="container" role="main">
-    <div id="dialogue" class="dialogue-box">
-      O público está ansioso pelo início do duelo!
+<div class="container" role="main">
+  <div id="dialogue" class="dialogue-box">O público está ansioso pelo início do duelo!</div>
+
+  <header>
+    <!-- Contador de bebidas à esquerda -->
+    <div style="text-align:left">
+      <div class="score" style="color:#7dd3fc">Bebidas tomadas: <span id="drinks-count">0</span></div>
     </div>
 
-    <header>
-      <div style="width:100%; text-align:right">
-        <div class="score" aria-live="polite">Você: <span id="score-user">0</span> — Site: <span id="score-comp">0</span></div>
-        <div class="streak" aria-live="polite">Vitórias consecutivas: <span id="streak">0</span></div>
-        <div class="games-streak" aria-live="polite">Jogos desde início da streak: <span id="games-since-streak">0</span></div>
-        <div class="total-games" aria-live="polite">Jogos totais: <span id="total-games">0</span></div>
-      </div>
-    </header>
+    <!-- Contadores atuais à direita -->
+    <div style="text-align:right">
+      <div class="score" aria-live="polite">Você: <span id="score-user">0</span> — Site: <span id="score-comp">0</span></div>
+      <div class="streak" aria-live="polite">Vitórias consecutivas: <span id="streak">0</span></div>
+      <div class="games-streak" aria-live="polite">Jogos desde início da streak: <span id="games-since-streak">0</span></div>
+      <div class="total-games" aria-live="polite">Jogos totais: <span id="total-games">0</span></div>
+    </div>
+  </header>
 
-    <section class="arena">
-      <div class="big">
-        <div style="text-align:center;margin-bottom:8px;color:var(--muted)">Escolha o seu Pokémon</div>
-        <div class="choices" role="list">
-          <button class="choice-btn" data-move="scyther" aria-label="Escolher Scyther (Papel)">
-            <img src="img/icon1.png" alt="Scyther" class="pick-img">
-            <strong class="poke-name">Scyther</strong>
-            <span class="label">Papel</span>
-          </button>
-          <button class="choice-btn" data-move="kleavor" aria-label="Escolher Kleavor (Pedra)">
-            <img src="img/icon2.png" alt="Kleavor" class="pick-img">
-            <strong class="poke-name">Kleavor</strong>
-            <span class="label">Pedra</span>
-          </button>
-          <button class="choice-btn" data-move="scizor" aria-label="Escolher Scizor (Tesoura)">
-            <img src="img/icon3.png" alt="Scizor" class="pick-img">
-            <strong class="poke-name">Scizor</strong>
-            <span class="label">Tesoura</span>
-          </button>
+  <section class="arena">
+    <div class="big">
+      <div style="text-align:center;margin-bottom:8px;color:var(--muted)">Escolha o seu Pokémon</div>
+      <div class="choices" role="list">
+        <button class="choice-btn" data-move="scyther"><img src="img/icon1.png" alt="Scyther" class="pick-img"><strong class="poke-name">Scyther</strong><span class="label">Papel</span></button>
+        <button class="choice-btn" data-move="kleavor"><img src="img/icon2.png" alt="Kleavor" class="pick-img"><strong class="poke-name">Kleavor</strong><span class="label">Pedra</span></button>
+        <button class="choice-btn" data-move="scizor"><img src="img/icon3.png" alt="Scizor" class="pick-img"><strong class="poke-name">Scizor</strong><span class="label">Tesoura</span></button>
+      </div>
+    </div>
+
+    <div class="big result-box" aria-live="polite">
+      <div style="text-align:center;color:var(--muted)">Escolhas</div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="flex:1;text-align:center">
+          <img id="user-pick-img" src="img/icon4.png" alt="Você" class="pick-img">
+          <div class="label">Você</div>
+        </div>
+        <div style="width:36px;text-align:center" class="vs">VS</div>
+        <div style="flex:1;text-align:center">
+          <img id="comp-pick-img" src="img/icon5.png" alt="Site" class="pick-img">
+          <div class="label">Site</div>
         </div>
       </div>
 
-      <div class="big result-box" aria-live="polite">
-        <div style="text-align:center;color:var(--muted)">Escolhas</div>
-        <div style="display:flex;align-items:center;gap:12px">
-          <div style="flex:1;text-align:center">
-            <img id="user-pick-img" src="img/icon4.png" alt="Você" class="pick-img">
-            <div class="label">Você</div>
-          </div>
-          <div style="width:36px;text-align:center" class="vs">VS</div>
-          <div style="flex:1;text-align:center">
-            <img id="comp-pick-img" src="img/icon5.png" alt="Site" class="pick-img">
-            <div class="label">Site</div>
-          </div>
-        </div>
+      <div id="outcome" class="outcome tie" style="margin-top:10px">Faça sua jogada</div>
 
-        <div id="outcome" class="outcome tie" style="margin-top:10px">Faça sua jogada</div>
-
-        <div class="buttons-row">
-          <button id="reset" class="small-btn">Resetar placar</button>
-          <button id="auto" class="small-btn">Jogar automático</button>
-        </div>
+      <div class="buttons-row">
+        <button id="reset" class="small-btn">Resetar placar</button>
+        <button id="auto" class="small-btn">Jogar automático</button>
       </div>
-    </section>
+    </div>
+  </section>
+</div>
+
+<!-- Tela de recompensa -->
+<div id="rewardScreen">
+  <img src="img/icon6.png" alt="Recompensa">
+  <div class="reward-dialogue">
+    <div id="reward-text">Cê ta mandando bem! Toma, peguei algo pra você manter o fôlego! Vai querer o que?</div>
+    <div id="reward-options"></div>
   </div>
+</div>
 
-  <script>
-    (function(){
-      const moves = ["scyther","kleavor","scizor"];
-      const icons = { scyther: 'img/icon1.png', kleavor: 'img/icon2.png', scizor: 'img/icon3.png' };
-      const buttons = document.querySelectorAll('.choice-btn');
-      const userPickImg = document.getElementById('user-pick-img');
-      const compPickImg = document.getElementById('comp-pick-img');
-      const outcomeEl = document.getElementById('outcome');
-      const scoreUserEl = document.getElementById('score-user');
-      const scoreCompEl = document.getElementById('score-comp');
-      const streakEl = document.getElementById('streak');
-      const totalGamesEl = document.getElementById('total-games');
-      const gamesSinceStreakEl = document.getElementById('games-since-streak');
-      const dialogue = document.getElementById('dialogue');
-      const resetBtn = document.getElementById('reset');
-      const autoBtn = document.getElementById('auto');
+<script>
+(function(){
+const moves = ["scyther","kleavor","scizor"];
+const icons = { scyther:'img/icon1.png', kleavor:'img/icon2.png', scizor:'img/icon3.png' };
+const buttons = document.querySelectorAll('.choice-btn');
+const userPickImg = document.getElementById('user-pick-img');
+const compPickImg = document.getElementById('comp-pick-img');
+const outcomeEl = document.getElementById('outcome');
+const scoreUserEl = document.getElementById('score-user');
+const scoreCompEl = document.getElementById('score-comp');
+const streakEl = document.getElementById('streak');
+const totalGamesEl = document.getElementById('total-games');
+const gamesSinceStreakEl = document.getElementById('games-since-streak');
+const drinksCountEl = document.getElementById('drinks-count');
+const dialogue = document.getElementById('dialogue');
+const resetBtn = document.getElementById('reset');
+const autoBtn = document.getElementById('auto');
 
-      let scoreUser = 0, scoreComp = 0, streak = 0, gamesSinceStreak = 0, waiting=false;
+const rewardScreen = document.getElementById('rewardScreen');
+const rewardText = document.getElementById('reward-text');
+const rewardOptionsDiv = document.getElementById('reward-options');
 
-      // Jogos totais persistentes
-      let totalGames = parseInt(localStorage.getItem('totalGames')) || 0;
-      totalGamesEl.textContent = totalGames;
+const drinkOptions = ["Água","Refrigerante","Energético","Água com gás","Suco de laranja","Vitamina de banana","Achocolatado"];
 
-      function compChoose(){ return moves[Math.floor(Math.random()*moves.length)]; }
-      function decide(user, comp){
-        if(user===comp) return 'tie';
-        if(user==='scyther' && comp==='kleavor') return 'win';
-        if(user==='kleavor' && comp==='scizor') return 'win';
-        if(user==='scizor' && comp==='scyther') return 'win';
-        return 'lose';
+let scoreUser=0, scoreComp=0, streak=0, gamesSinceStreak=0, waiting=false, drinksTaken=0;
+let totalGames = parseInt(localStorage.getItem('totalGames')) || 0;
+
+// Bônus temporários
+let forceNextComp = null;
+let nextTieCountsAsWin = false;
+let nextWinPlusTwo = false;
+let ignoreNextLossOrTie = false;
+
+totalGamesEl.textContent = totalGames;
+drinksCountEl.textContent = drinksTaken;
+
+function compChoose(){
+  if(forceNextComp){ const f = forceNextComp; forceNextComp=null; return f; }
+  return moves[Math.floor(Math.random()*moves.length)];
+}
+
+function decide(user,comp){
+  if(user===comp) return 'tie';
+  if(user==='scyther' && comp==='kleavor') return 'win';
+  if(user==='kleavor' && comp==='scizor') return 'win';
+  if(user==='scizor' && comp==='scyther') return 'win';
+  return 'lose';
+}
+
+function showOutcome(result){
+  outcomeEl.classList.remove('win','lose','tie');
+  if(result==='win'){ outcomeEl.textContent='Você venceu!'; outcomeEl.classList.add('win'); }
+  else if(result==='lose'){ outcomeEl.textContent='Você perdeu.'; outcomeEl.classList.add('lose'); }
+  else { outcomeEl.textContent='Empate.'; outcomeEl.classList.add('tie'); }
+}
+
+function updateStreak(result){
+  if(result==='win'){ 
+    streak++; 
+    gamesSinceStreak++; 
+    if(nextWinPlusTwo){ streak++; nextWinPlusTwo=false; }
+  } else { 
+    if(ignoreNextLossOrTie){ 
+      gamesSinceStreak++;
+      // streak não zera nem aumenta
+    } else { 
+      streak=0; 
+      gamesSinceStreak=0; 
+    } 
+  }
+  streakEl.textContent = streak;
+  gamesSinceStreakEl.textContent = gamesSinceStreak;
+}
+
+function updateDialogue(result){
+  if(result==='start'){ dialogue.textContent="O público está ansioso pelo início do duelo!"; }
+  else if(result==='thinking'){ dialogue.textContent="O público arregala os olhos, esperando ambos fazerem sua jogada!"; }
+  else if(result==='win'){
+    if(streak>=5) dialogue.textContent="O público não consegue acreditar no que está acontecendo!";
+    else if(streak===4) dialogue.textContent="O público vai a loucura, o impossível está acontecendo!";
+    else if(streak===3) dialogue.textContent="O público se levanta de empolgação! Você é o herói deles";
+    else if(streak===2) dialogue.textContent="O público parece bater palmas e gritar em alegria!";
+    else dialogue.textContent="O público vibra em comemoração, você se sente determinado";
+  } else if(result==='lose'){ dialogue.textContent="O público parece triste, mas eles te incentivam a continuar!"; }
+  else if(result==='tie'){ dialogue.textContent="O público parece animado com a tensão do duelo!"; }
+}
+
+function incrementTotalGames(){ totalGames++; totalGamesEl.textContent=totalGames; localStorage.setItem('totalGames', totalGames); }
+
+function maybeShowReward(){
+  if(streak > 0 && Math.random() < 1) { // 0.60 = 60% de chance
+    showRewardScreen();
+  }
+}
+
+function showRewardScreen(){
+  let shuffled = drinkOptions.sort(()=>0.5-Math.random());
+  let choices = shuffled.slice(0,2);
+  rewardOptionsDiv.innerHTML = '';
+  choices.forEach(c=>{
+    let btn = document.createElement('button');
+    btn.textContent = c;
+    btn.classList.add('reward-choice');
+    btn.addEventListener('click',()=>{
+      drinksTaken++;
+      drinksCountEl.textContent = drinksTaken;
+
+      // Resetar bônus temporários
+      nextTieCountsAsWin=false;
+      nextWinPlusTwo=false;
+      ignoreNextLossOrTie=false;
+      forceNextComp=null;
+
+      switch(c){
+        case 'Água': rewardText.textContent = "Você bebe água. Você sente que a próxima jogada do velhote será pedra!"; forceNextComp='kleavor'; break;
+        case 'Refrigerante': rewardText.textContent = "Você bebe o refrigerante. Se sua próxima rodada for um empate, contará como uma vitória!"; nextTieCountsAsWin=true; break;
+        case 'Energético': rewardText.textContent = "Você bebe o energético. Se você vencer a próxima rodada, contará como +2 em suas vitórias consecutivas!"; nextWinPlusTwo=true; break;
+        case 'Água com gás': rewardText.textContent = "Você bebe a água com gás. Seu prêmio em chatcoins dobrará!"; break;
+        case 'Suco de laranja': rewardText.textContent = "Você bebe o suco de laranja. O próximo ovo chocado terá um pokémon de um tipo que você escolher!"; break;
+        case 'Vitamina de banana': rewardText.textContent = "Você bebe a vitamina de banana. Seu próximo empate ou derrota não irá zerar suas vitórias consecutivas!"; ignoreNextLossOrTie=true; break;
+        case 'Achocolatado': rewardText.textContent = "Você bebe o achocolatado. Você sente que o velhote tem grandes chances de escolher papel na próxima rodada, mas não tem certeza...";
+          if(Math.random()<0.7) forceNextComp='scyther'; else forceNextComp=moves[Math.floor(Math.random()*2)+1]; break;
       }
 
-      function showOutcome(result){
-        outcomeEl.classList.remove('win','lose','tie');
-        if(result==='win'){ outcomeEl.textContent='Você venceu!'; outcomeEl.classList.add('win'); }
-        else if(result==='lose'){ outcomeEl.textContent='Você perdeu.'; outcomeEl.classList.add('lose'); }
-        else { outcomeEl.textContent='Empate.'; outcomeEl.classList.add('tie'); }
-      }
-
-      function updateStreak(result){
-        if(result==='win'){ streak++; gamesSinceStreak++; }
-        else { streak=0; gamesSinceStreak=0; }
-        streakEl.textContent = streak;
-        gamesSinceStreakEl.textContent = gamesSinceStreak;
-      }
-
-      function updateDialogue(result){
-        if(result==='start'){ dialogue.textContent="O público está ansioso pelo início do duelo!"; }
-        else if(result==='thinking'){ dialogue.textContent="O público arregala os olhos, esperando ambos fazerem sua jogada!"; }
-        else if(result==='win'){
-          if(streak>=5) dialogue.textContent="O público não consegue acreditar no que está acontecendo!";
-          else if(streak===4) dialogue.textContent="O público vai a loucura, o impossível está acontecendo!";
-          else if(streak===3) dialogue.textContent="O público se levanta de empolgação! Você é o herói deles";
-          else if(streak===2) dialogue.textContent="O público parece bater palmas e gritar em alegria!";
-          else dialogue.textContent="O público vibra em comemoração, você se sente determinado";
-        } else if(result==='lose'){ dialogue.textContent="O público parece triste, mas eles te incentivam a continuar!"; }
-        else if(result==='tie'){ dialogue.textContent="O público parece animado com a tensão do duelo!"; }
-      }
-
-      function incrementTotalGames(){ totalGames++; totalGamesEl.textContent=totalGames; localStorage.setItem('totalGames', totalGames); }
-
-      function playRound(userMove){
-        if(waiting) return;
-        waiting=true;
-        const compMove=compChoose();
-        userPickImg.src = icons[userMove];
-        compPickImg.src='img/icon5.png';
-        compPickImg.classList.add('thinking');
-        outcomeEl.textContent='...';
-        updateDialogue('thinking');
-
-        setTimeout(()=>{
-          compPickImg.classList.remove('thinking');
-          compPickImg.src=icons[compMove];
-          const r=decide(userMove, compMove);
-          if(r==='win') scoreUser++;
-          if(r==='lose') scoreComp++;
-          scoreUserEl.textContent = scoreUser;
-          scoreCompEl.textContent = scoreComp;
-          updateStreak(r);
-          showOutcome(r);
-          updateDialogue(r);
-
-          incrementTotalGames();
-
-          waiting=false;
-        },3000);
-      }
-
-      buttons.forEach(b=>b.addEventListener('click',()=>playRound(b.dataset.move)));
-      resetBtn.addEventListener('click',()=>{
-        scoreUser=scoreComp=streak=gamesSinceStreak=0;
-        scoreUserEl.textContent=scoreCompEl.textContent=streakEl.textContent=gamesSinceStreakEl.textContent='0';
-        userPickImg.src='img/icon4.png'; compPickImg.src='img/icon5.png';
-        outcomeEl.textContent='Placar zerado'; outcomeEl.className='outcome tie';
-        updateDialogue('start');
+      rewardOptionsDiv.innerHTML = '';
+      const entBtn = document.createElement('button');
+      entBtn.textContent = "Entendido";
+      entBtn.classList.add('reward-choice');
+      entBtn.addEventListener('click',()=>{
+        rewardScreen.style.display='none';
+        waiting=false;
       });
-      autoBtn.addEventListener('click',()=>playRound(moves[Math.floor(Math.random()*moves.length)]));
-      updateDialogue('start');
-  })();
-  </script>
+      rewardOptionsDiv.appendChild(entBtn);
+    });
+    rewardOptionsDiv.appendChild(btn);
+  });
+  rewardText.textContent = "Cê ta mandando bem! Toma, peguei algo pra você manter o fôlego! Vai querer o que?";
+  rewardScreen.style.display='flex';
+  waiting=true;
+}
+
+function playRound(userMove){
+  if(waiting) return;
+  waiting = true;
+  const compMove = compChoose();
+  userPickImg.src = icons[userMove];
+  compPickImg.src = 'img/icon5.png';
+  compPickImg.classList.add('thinking');
+  outcomeEl.textContent = '...';
+  updateDialogue('thinking');
+
+  setTimeout(()=>{
+    compPickImg.classList.remove('thinking');
+    compPickImg.src = icons[compMove];
+    let r = decide(userMove, compMove);
+
+    // Aplicar bônus da bebida (efeitos válidos apenas nesta rodada)
+    let hadBonus = false;
+
+    if(r === 'tie' && nextTieCountsAsWin){
+      r = 'win';
+      nextTieCountsAsWin = false;
+      hadBonus = true;
+    }
+
+    if(r === 'win'){
+      scoreUser++;
+      if(nextWinPlusTwo){
+        streak += 1; // soma +1 além do normal (total +2)
+        nextWinPlusTwo = false;
+        hadBonus = true;
+      }
+    }
+
+    if(r === 'lose') scoreComp++;
+
+    scoreUserEl.textContent = scoreUser;
+    scoreCompEl.textContent = scoreComp;
+    updateStreak(r);
+    showOutcome(r);
+    updateDialogue(r);
+    incrementTotalGames();
+
+    // Se tinha bônus da vitamina de banana, ele só ignora essa rodada — depois apaga
+    if(ignoreNextLossOrTie){
+      if(r === 'lose' || r === 'tie') {
+        // streak não zera, mas o efeito acaba após esta rodada
+        ignoreNextLossOrTie = false;
+      }
+    }
+
+    // Limpa quaisquer bônus que deveriam durar só 1 rodada
+    if(!hadBonus){
+      nextTieCountsAsWin = false;
+      nextWinPlusTwo = false;
+      ignoreNextLossOrTie = false;
+      forceNextComp = null;
+    }
+
+    maybeShowReward();
+    waiting = false;
+  }, 3000);
+}
+
+buttons.forEach(b=>b.addEventListener('click',()=>playRound(b.dataset.move)));
+resetBtn.addEventListener('click',()=>{
+  scoreUser=scoreComp=streak=gamesSinceStreak=0;
+  scoreUserEl.textContent=scoreCompEl.textContent=streakEl.textContent=gamesSinceStreakEl.textContent='0';
+  userPickImg.src='img/icon4.png'; compPickImg.src='img/icon5.png';
+  outcomeEl.textContent='Placar zerado'; outcomeEl.className='outcome tie';
+  updateDialogue('start');
+});
+autoBtn.addEventListener('click',()=>playRound(moves[Math.floor(Math.random()*moves.length)]));
+updateDialogue('start');
+})();
+</script>
 </body>
 </html>
