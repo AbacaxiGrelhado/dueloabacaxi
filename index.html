@@ -33,10 +33,10 @@
     padding:20px;
     box-shadow:0 8px 30px rgba(2,6,23,0.6);
   }
-  header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-  h1{font-size:20px;margin:0}
+  header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-direction:column}
   .score{font-size:14px;color:var(--muted)}
   .streak{font-size:14px;color:var(--accent);margin-top:4px;text-align:right}
+  .total-games{font-size:14px;color:#facc15;margin-top:2px;text-align:right}
   .arena{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:center}
   .choices{display:flex;gap:12px;justify-content:center}
   .choice-btn{
@@ -96,10 +96,10 @@
     </div>
 
     <header>
-      <h1></h1>
-      <div style="text-align:right">
+      <div style="width:100%; text-align:right">
         <div class="score" aria-live="polite">Você: <span id="score-user">0</span> — Site: <span id="score-comp">0</span></div>
         <div class="streak" aria-live="polite">Vitórias consecutivas: <span id="streak">0</span></div>
+        <div class="total-games" aria-live="polite">Jogos totais: <span id="total-games">0</span></div>
       </div>
     </header>
 
@@ -161,114 +161,90 @@
       const scoreUserEl = document.getElementById('score-user');
       const scoreCompEl = document.getElementById('score-comp');
       const streakEl = document.getElementById('streak');
+      const totalGamesEl = document.getElementById('total-games');
       const dialogue = document.getElementById('dialogue');
       const resetBtn = document.getElementById('reset');
       const autoBtn = document.getElementById('auto');
 
-      let scoreUser = 0, scoreComp = 0, streak = 0;
-      let waiting = false;
+      let scoreUser = 0, scoreComp = 0, streak = 0, waiting=false;
 
-      function compChoose(){
-        return moves[Math.floor(Math.random()*moves.length)];
-      }
+      // 🔹 Jogos totais persistentes
+      let totalGames = parseInt(localStorage.getItem('totalGames')) || 0;
+      totalGamesEl.textContent = totalGames;
 
+      function compChoose(){ return moves[Math.floor(Math.random()*moves.length)]; }
       function decide(user, comp){
-        if(user === comp) return 'tie';
-        if(user === 'scyther' && comp === 'kleavor') return 'win';
-        if(user === 'kleavor' && comp === 'scizor') return 'win';
-        if(user === 'scizor' && comp === 'scyther') return 'win';
+        if(user===comp) return 'tie';
+        if(user==='scyther' && comp==='kleavor') return 'win';
+        if(user==='kleavor' && comp==='scizor') return 'win';
+        if(user==='scizor' && comp==='scyther') return 'win';
         return 'lose';
       }
 
       function showOutcome(result){
         outcomeEl.classList.remove('win','lose','tie');
-        if(result === 'win'){
-          outcomeEl.textContent = 'Você venceu!';
-          outcomeEl.classList.add('win');
-        } else if(result === 'lose'){
-          outcomeEl.textContent = 'Você perdeu.';
-          outcomeEl.classList.add('lose');
-        } else {
-          outcomeEl.textContent = 'Empate.';
-          outcomeEl.classList.add('tie');
-        }
+        if(result==='win'){ outcomeEl.textContent='Você venceu!'; outcomeEl.classList.add('win'); }
+        else if(result==='lose'){ outcomeEl.textContent='Você perdeu.'; outcomeEl.classList.add('lose'); }
+        else { outcomeEl.textContent='Empate.'; outcomeEl.classList.add('tie'); }
       }
 
-      function updateStreak(result){
-        if(result === 'win') streak++;
-        else if(result === 'lose') streak = 0;
-        streakEl.textContent = streak;
-      }
+      function updateStreak(result){ streak = result==='win'? streak+1 : 0; streakEl.textContent=streak; }
 
       function updateDialogue(result){
-        if(result === 'start'){
-          dialogue.textContent = "O público está ansioso pelo início do duelo!";
-        } else if(result === 'thinking'){
-          dialogue.textContent = "O público arregala os olhos, esperando ambos fazerem sua jogada!";
-        } else if(result === 'win'){
-          if(streak >= 5){
-            dialogue.textContent = "O público não consegue acreditar no que está acontecendo!";
-          } else if(streak === 4){
-            dialogue.textContent = "O público vai a loucura, o impossível está acontecendo!";
-          } else if(streak === 3){
-            dialogue.textContent = "O público se levanta de empolgação! Você é o herói deles";
-          } else if(streak === 2){
-            dialogue.textContent = "O público parece bater palmas e gritar em alegria!";
-          } else {
-            dialogue.textContent = "O público vibra em comemoração, você se sente determinado";
-          }
-        } else if(result === 'lose'){
-          dialogue.textContent = "O público parece triste, mas eles te incentivam a continuar!";
-        } else if(result === 'tie'){
-          dialogue.textContent = "O público parece animado com a tensão do duelo!";
-        }
+        if(result==='start'){ dialogue.textContent="O público está ansioso pelo início do duelo!"; }
+        else if(result==='thinking'){ dialogue.textContent="O público arregala os olhos, esperando ambos fazerem sua jogada!"; }
+        else if(result==='win'){
+          if(streak>=5) dialogue.textContent="O público não consegue acreditar no que está acontecendo!";
+          else if(streak===4) dialogue.textContent="O público vai a loucura, o impossível está acontecendo!";
+          else if(streak===3) dialogue.textContent="O público se levanta de empolgação! Você é o herói deles";
+          else if(streak===2) dialogue.textContent="O público parece bater palmas e gritar em alegria!";
+          else dialogue.textContent="O público vibra em comemoração, você se sente determinado";
+        } else if(result==='lose'){ dialogue.textContent="O público parece triste, mas eles te incentivam a continuar!"; }
+        else if(result==='tie'){ dialogue.textContent="O público parece animado com a tensão do duelo!"; }
       }
+
+      function incrementTotalGames(){ totalGames++; totalGamesEl.textContent=totalGames; localStorage.setItem('totalGames', totalGames); }
 
       function playRound(userMove){
         if(waiting) return;
-        waiting = true;
-
-        const compMove = compChoose();
+        waiting=true;
+        const compMove=compChoose();
         userPickImg.src = icons[userMove];
-        compPickImg.src = 'img/icon5.png';
+        compPickImg.src='img/icon5.png';
         compPickImg.classList.add('thinking');
-        outcomeEl.textContent = '...';
+        outcomeEl.textContent='...';
         updateDialogue('thinking');
 
         setTimeout(()=>{
           compPickImg.classList.remove('thinking');
-          compPickImg.src = icons[compMove];
-          const r = decide(userMove, compMove);
-          if(r === 'win') scoreUser++;
-          if(r === 'lose') scoreComp++;
-          scoreUserEl.textContent = scoreUser;
-          scoreCompEl.textContent = scoreComp;
+          compPickImg.src=icons[compMove];
+          const r=decide(userMove, compMove);
+          if(r==='win') scoreUser++;
+          if(r==='lose') scoreComp++;
+          scoreUserEl.textContent=scoreUser;
+          scoreCompEl.textContent=scoreComp;
           updateStreak(r);
           showOutcome(r);
           updateDialogue(r);
-          waiting = false;
-        }, 3000);
+
+          // 🔹 Incrementa total de jogos persistente
+          incrementTotalGames();
+
+          waiting=false;
+        },3000);
       }
 
-      buttons.forEach(b => b.addEventListener('click', () => {
-        playRound(b.dataset.move);
-      }));
-
-      resetBtn.addEventListener('click', ()=>{
-        scoreUser = scoreComp = streak = 0;
-        scoreUserEl.textContent = scoreCompEl.textContent = streakEl.textContent = '0';
-        userPickImg.src = 'img/icon4.png'; compPickImg.src = 'img/icon5.png';
-        outcomeEl.textContent = 'Placar zerado';
-        outcomeEl.className = 'outcome tie';
+      buttons.forEach(b=>b.addEventListener('click',()=>playRound(b.dataset.move)));
+      resetBtn.addEventListener('click',()=>{
+        scoreUser=scoreComp=streak=0;
+        scoreUserEl.textContent=scoreCompEl.textContent=streakEl.textContent='0';
+        userPickImg.src='img/icon4.png'; compPickImg.src='img/icon5.png';
+        outcomeEl.textContent='Placar zerado'; outcomeEl.className='outcome tie';
         updateDialogue('start');
       });
-
-      autoBtn.addEventListener('click', ()=>{
-        playRound(moves[Math.floor(Math.random()*moves.length)]);
-      });
-
+      autoBtn.addEventListener('click',()=>playRound(moves[Math.floor(Math.random()*moves.length)]));
       updateDialogue('start');
-    })();
+  })();
   </script>
 </body>
 </html>
