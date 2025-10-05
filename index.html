@@ -237,7 +237,7 @@ function showRewardScreen(){
         case 'Refrigerante': rewardText.textContent = "Você bebe o refrigerante. Se sua próxima rodada for um empate, contará como uma vitória!"; nextTieCountsAsWin=true; break;
         case 'Energético': rewardText.textContent = "Você bebe o energético. Se você vencer a próxima rodada, contará como +2 em suas vitórias consecutivas!"; nextWinPlusTwo=true; break;
         case 'Água com gás': rewardText.textContent = "Você bebe a água com gás. Seu prêmio em chatcoins dobrará!"; break;
-        case 'Suco de laranja': rewardText.textContent = "Você bebe o suco de laranja. O próximo ovo chocado terá um pokémon de um tipo que você escolher!"; break;
+        case 'Suco de laranja': rewardText.textContent = "Você bebe o suco de laranja. O próximo ovo chocado começará LV 20!"; break;
         case 'Vitamina de banana': rewardText.textContent = "Você bebe a vitamina de banana. Seu próximo empate ou derrota não irá zerar suas vitórias consecutivas!"; ignoreNextLossOrTie=true; break;
         case 'Achocolatado': rewardText.textContent = "Você bebe o achocolatado. Você sente que o velhote tem grandes chances de escolher papel na próxima rodada, mas não tem certeza...";
           if(Math.random()<0.7) forceNextComp='scyther'; else forceNextComp=moves[Math.floor(Math.random()*2)+1]; break;
@@ -337,4 +337,5 @@ updateDialogue('start');
 </script>
 </body>
 </html>
+
 
